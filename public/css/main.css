@@ -1,0 +1,11 @@
+
+#currency_div, #four_o_four_div {
+    width: 50%;
+    margin: 0 auto;
+    text-align: center;
+    font-family: helvetica, verdana, arial, sans-serif;
+    font-size: 45;
+    /*top: 50%;*/
+    height: 50%;
+    margin-top: 20%;
+}
