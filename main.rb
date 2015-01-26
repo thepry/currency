@@ -4,21 +4,45 @@ require_relative 'config'
 require "json"
 
 get '/:currency' do
-  currency_json = JSON.parse(get_currency)
-  rates_json = currency_json['rates']
+  currency = params[:currency]
+  render_currency(currency, BASE_CURRENCY)
+end
 
-  @currency = params[:currency]
-  if rates_json.has_key?(@currency)
-    @base_currency = BASE_CURRENCY
-    @rate = get_currency_rate(rates_json, @currency)
+get '/:currency/:base_currency' do
+  currency = params[:currency]
+  base_currency = params[:base_currency]
+  render_currency(currency, base_currency)
+end
+
+get '/' do
+  redirect '/USD'
+end
+
+def render_currency(currency, base_currency)
+  rates_json = get_rates_json
+  @currency = currency
+  @base_currency = base_currency
+
+  if rates_json.has_key?(@currency) & rates_json.has_key?(@base_currency)
+    @rate = get_currency_rate(rates_json, @currency, @base_currency)
     erb :main
   else
     four_o_four
   end
 end
 
-get '/' do
-  redirect '/USD'
+def get_rates_json
+  current_time = Time.now
+  if defined? @@global_hash
+    time_difference = current_time - @@global_hash[:current_time]
+    puts current_time, @@global_hash[:current_time], time_difference
+    if time_difference > UPDATE_RATE_SECONDS
+      @@global_hash = {current_time: Time.now, rates_json: JSON.parse(get_currency)['rates']}
+    end
+  else
+    @@global_hash = {current_time: Time.now, rates_json: JSON.parse(get_currency)['rates']}
+  end
+  rates_json = @@global_hash[:rates_json]
 end
 
 def four_o_four
@@ -26,7 +50,6 @@ def four_o_four
 end
 
 def get_currency
-
   parsed_url = URI.parse('http://openexchangerates.org/api/latest.json?app_id=' + API_KEY)
   http = Net::HTTP.new(parsed_url.host, parsed_url.port)
   http.use_ssl = false
@@ -36,12 +59,12 @@ def get_currency
   response.body
 end
 
-def get_base_currency_rate(rates_json)
-  rates_json[BASE_CURRENCY]
+def get_base_currency_rate(rates_json, base_currency)
+  rates_json[base_currency]
 end
 
-def get_currency_rate(rates_json, currency)
-  base_rate = get_base_currency_rate(rates_json)
+def get_currency_rate(rates_json, currency, base_currency = BASE_CURRENCY)
+  base_rate = get_base_currency_rate(rates_json, base_currency)
   currency_rate = rates_json[currency]
 
   result = base_rate / currency_rate
