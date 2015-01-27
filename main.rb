@@ -4,13 +4,13 @@ require_relative 'config'
 require "json"
 
 get '/:currency' do
-  currency = params[:currency]
+  currency = params[:currency].strip.upcase
   render_currency(currency, BASE_CURRENCY)
 end
 
 get '/:currency/:base_currency' do
-  currency = params[:currency]
-  base_currency = params[:base_currency]
+  currency = params[:currency].strip.upcase
+  base_currency = params[:base_currency].strip.upcase
   render_currency(currency, base_currency)
 end
 
