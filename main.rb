@@ -3,12 +3,15 @@ require 'net/http'
 require_relative 'config'
 require "json"
 
-get '/:currency' do
+get '/:currency/?' do
   currency = params[:currency].strip.upcase
   render_currency(currency, BASE_CURRENCY)
 end
 
-get '/:currency/:base_currency' do
+
+
+
+get '/:currency/:base_currency/?' do
   currency = params[:currency].strip.upcase
   base_currency = params[:base_currency].strip.upcase
   render_currency(currency, base_currency)
@@ -32,18 +35,17 @@ def render_currency(currency, base_currency)
 end
 
 def get_rates_json
-  current_time = Time.now
-  if defined? @@global_hash
-    time_difference = current_time - @@global_hash[:current_time]
-    puts current_time, @@global_hash[:current_time], time_difference
-    if time_difference > UPDATE_RATE_SECONDS
-      @@global_hash = {current_time: Time.now, rates_json: JSON.parse(get_currency)['rates']}
-    end
-  else
-    @@global_hash = {current_time: Time.now, rates_json: JSON.parse(get_currency)['rates']}
-  end
-  rates_json = @@global_hash[:rates_json]
+  @@global_hash ||= set_rates
+  time_difference = Time.now - @@global_hash[:current_time]
+  @@global_hash = set_rates if time_difference > UPDATE_RATE_SECONDS
+
+  @@global_hash[:rates_json]
 end
+
+def set_rates
+  {current_time: Time.now, rates_json: JSON.parse(get_currency)['rates']}
+end
+
 
 def four_o_four
   erb :four_o_four
