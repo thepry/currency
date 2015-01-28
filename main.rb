@@ -3,13 +3,11 @@ require 'net/http'
 require_relative 'config'
 require "json"
 
+
 get '/:currency/?' do
   currency = params[:currency].strip.upcase
   render_currency(currency, BASE_CURRENCY)
 end
-
-
-
 
 get '/:currency/:base_currency/?' do
   currency = params[:currency].strip.upcase
@@ -20,6 +18,7 @@ end
 get '/' do
   redirect '/USD'
 end
+
 
 def render_currency(currency, base_currency)
   rates_json = get_rates_json
@@ -45,7 +44,6 @@ end
 def set_rates
   {current_time: Time.now, rates_json: JSON.parse(get_currency)['rates']}
 end
-
 
 def four_o_four
   erb :four_o_four
