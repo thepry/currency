@@ -19,6 +19,25 @@ get '/' do
   redirect '/USD'
 end
 
+get '/json/:currency/:base_currency/?' do
+  rates_json = get_rates_json
+  currency = params[:currency].strip.upcase
+  base_currency = params[:base_currency].strip.upcase
+
+  result = {currency: currency, to_currency: base_currency}
+  errors = ''
+  if !rates_json.has_key?(currency)
+    errors += "There is no such currency #{ currency }."
+  elsif !rates_json.has_key?(base_currency)
+    errors += "There is no such currency #{ base_currency }."
+  else
+    rate = get_currency_rate(rates_json, currency, base_currency)
+    result[:rate] = rate
+  end
+  result[:errors] = errors if !errors.empty?
+  result.to_json
+end
+
 
 def render_currency(currency, base_currency)
   rates_json = get_rates_json
